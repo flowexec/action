@@ -12,10 +12,12 @@ Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
 ## Quick Start
 
 ```yaml
-- uses: jahvon/flow-action@v1
+- uses: jahvon/flow-action@v1.0.0-beta1
   with:
     executable: 'build app'
 ```
+
+Check out the [flow CI workflow](https://github.com/jahvon/flow/blob/main/.github/workflows/ci.yaml) for examples of how this can be used.
 
 ## Inputs
 
@@ -64,12 +66,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build application
-        uses: jahvon/flow-action@v1
+        uses: jahvon/flow-action@v1.0.0-beta1
         with:
           executable: 'build app'
 
       - name: Run tests
-        uses: jahvon/flow-action@v1
+        uses: jahvon/flow-action@v1.0.0-beta1
         with:
           executable: 'test unit'
 ```
@@ -78,7 +80,7 @@ jobs:
 
 ```yaml
 - name: Deploy to staging
-  uses: jahvon/flow-action@v1
+  uses: jahvon/flow-action@v1.0.0-beta1
   with:
     executable: 'deploy staging'
     workspaces: |
@@ -92,7 +94,7 @@ jobs:
 
 ```yaml
 - name: Deploy with secrets
-  uses: jahvon/flow-action@v1
+  uses: jahvon/flow-action@v1.0.0-beta1
   with:
     executable: 'deploy production'
     secrets: |
@@ -110,7 +112,7 @@ jobs:
     outputs:
       vault-key: ${{ steps.init.outputs.vault-key }}
     steps:
-      - uses: jahvon/flow-action@v1
+      - uses: jahvon/flow-action@v1.0.0-beta1
         id: init
         with:
           executable: 'validate'
@@ -120,7 +122,7 @@ jobs:
   deploy:
     needs: setup
     steps:
-      - uses: jahvon/flow-action@v1
+      - uses: jahvon/flow-action@v1.0.0-beta1
         with:
           executable: 'deploy production'
           vault-key: ${{ needs.setup.outputs.vault-key }}
@@ -132,7 +134,7 @@ jobs:
 
 ```yaml
 - name: Complex deployment
-  uses: jahvon/flow-action@v1
+  uses: jahvon/flow-action@v1.0.0-beta1
   with:
     executable: 'deploy staging'
     workspaces: |
