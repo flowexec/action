@@ -9,7 +9,11 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
 
     if [ -z "${VAULT_KEY:-}" ]; then
         echo "🔑 Creating vault..."
-        vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>&1)
+        if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+            vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY --log-level debug 2>&1)
+        else
+            vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>&1)
+        fi
 
         # extract from pattern: "Your vault encryption key is: <key>"
         extracted_key=$(echo "$vault_output" | grep -o "Your vault encryption key is: .*" | cut -d':' -f2- | xargs || echo "")
@@ -26,16 +30,28 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
     else
         export FLOW_VAULT_GHA_KEY="$VAULT_KEY"
         echo "Using provided vault key"
-        flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>/dev/null || true
+        if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+            flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY --log-level debug 2>/dev/null || true
+        else
+            flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>/dev/null || true
+        fi
 
         echo "vault-key=$VAULT_KEY" >> "$GITHUB_OUTPUT"
     fi
-    flow vault switch github-actions
+    if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+        flow vault switch github-actions --log-level debug
+    else
+        flow vault switch github-actions
+    fi
 
     echo "📝 Setting secrets..."
     echo "$SECRETS_INPUT" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
         echo "Setting secret: $key"
-        echo "$value" | flow secret set "$key"
+        if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+            echo "$value" | flow secret set "$key" --log-level debug
+        else
+            echo "$value" | flow secret set "$key"
+        fi
     done
 
     echo "✅ Vault setup completed"
