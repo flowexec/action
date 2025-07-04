@@ -1,0 +1,131 @@
+name: 'Flow Execute'
+description: 'Execute flow workflows in GitHub Actions'
+author: 'jahvon'
+
+inputs:
+  executable:
+    description: 'Flow executable to run (e.g., "VERB NAME", "build app", "test unit", "deploy staging")'
+    required: true
+
+  workspace:
+    description: 'Flow workspace to use (path or name)'
+    required: false
+    default: '.'
+
+  workspace-name:
+    description: 'Name for the workspace (auto-generated if not provided)'
+    required: false
+    default: ''
+
+  workspaces:
+    description: 'YAML/JSON map of workspaces (supports local paths and git repositories)'
+    required: false
+    default: ''
+
+  clone-token:
+    description: 'GitHub token for cloning private repositories'
+    required: false
+    default: ''
+
+  clone-depth:
+    description: 'Git clone depth for repository cloning'
+    required: false
+    default: '1'
+
+  checkout-path:
+    description: 'Base directory for cloning repositories'
+    required: false
+    default: '.flow-workspaces'
+
+  flow-version:
+    description: 'Version of flow CLI to install'
+    required: false
+    default: 'latest'
+
+  secrets:
+    description: 'JSON object of secrets to set in flow vault (key-value pairs)'
+    required: false
+    default: '{}'
+
+  vault-key:
+    description: 'Vault encryption key (for existing vaults)'
+    required: false
+
+  working-directory:
+    description: 'Directory to run flow from'
+    required: false
+    default: '.'
+
+  timeout:
+    description: 'Timeout for executable execution'
+    required: false
+    default: '30m'
+
+  continue-on-error:
+    description: 'Continue workflow if flow executable fails'
+    required: false
+    default: 'false'
+
+outputs:
+  exit-code:
+    description: 'Exit code of the flow executable'
+    value: ${{ steps.flow-exec.outputs.exit-code }}
+
+  output:
+    description: 'Output from the flow executable'
+    value: ${{ steps.flow-exec.outputs.output }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install flow CLI
+      shell: bash
+      run: ${{ github.action_path }}/scripts/install-flow.sh
+      env:
+        FLOW_VERSION: ${{ inputs.flow-version }}
+        TIMEOUT: ${{ inputs.timeout }}
+
+    - name: Setup flow workspaces
+      shell: bash
+      run: ${{ github.action_path }}/scripts/setup-workspaces.sh
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        WORKSPACES_INPUT: ${{ inputs.workspaces }}
+        WORKSPACE_PATH: ${{ inputs.workspace }}
+        WORKSPACE_NAME: ${{ inputs.workspace-name }}
+        CLONE_TOKEN: ${{ inputs.clone-token }}
+        CLONE_DEPTH: ${{ inputs.clone-depth }}
+        CHECKOUT_PATH: ${{ inputs.checkout-path }}
+        EXECUTABLE_INPUT: ${{ inputs.executable }}
+
+    - name: Setup vault and secrets
+      shell: bash
+      run: ${{ github.action_path }}/scripts/setup-vault.sh
+      working-directory: ${{ inputs.working-directory }}
+      if: inputs.secrets != '{}' || inputs.vault-key != ''
+      env:
+        SECRETS_INPUT: ${{ inputs.secrets }}
+        VAULT_KEY: ${{ inputs.vault-key }}
+
+    - name: Execute flow executable
+      shell: bash
+      run: ${{ github.action_path }}/scripts/execute.sh
+      working-directory: ${{ inputs.working-directory }}
+      id: flow-exec
+      env:
+        EXECUTABLE_INPUT: ${{ inputs.executable }}
+        VAULT_KEY: ${{ inputs.vault-key }}
+        CONTINUE_ON_ERROR: ${{ inputs.continue-on-error }}
+        GITHUB_OUTPUT: ${{ github.outputs }}
+
+    - name: Upload flow logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: flow-logs-${{ github.run_id }}
+        path: ${{ inputs.working-directory }}/executable_output.txt
+        retention-days: 7
+
+branding:
+  icon: 'play'
+  color: 'white'
