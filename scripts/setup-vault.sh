@@ -1,5 +1,7 @@
 set -euo pipefail
 
+echo "::group::Vault Setup"
+
 echo "Setting up flow vault and secrets..."
 
 if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
@@ -40,3 +42,5 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
 else
     echo "ℹ️  No secrets to configure"
 fi
+
+echo "::endgroup::"

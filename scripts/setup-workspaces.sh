@@ -1,5 +1,7 @@
 set -euo pipefail
 
+echo "::group::Workspace Setup"
+
 echo "Setting up flow workspaces..."
 
 mkdir -p "${CHECKOUT_PATH:-.flow-workspaces}"
@@ -119,3 +121,5 @@ echo "🔄 Syncing..."
 flow sync
 
 echo "✅ Workspace setup completed"
+
+echo "::endgroup::"

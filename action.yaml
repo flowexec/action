@@ -61,6 +61,11 @@ inputs:
     required: false
     default: '30m'
 
+  upload:
+    description: 'Upload flow logs as an artifact'
+    required: false
+    default: 'false'
+
   continue-on-error:
     description: 'Continue workflow if flow executable fails'
     required: false
@@ -120,11 +125,11 @@ runs:
 
     - name: Upload flow logs
       uses: actions/upload-artifact@v4
-      if: always()
+      if: ${{ inputs.upload == 'true' && steps.flow-exec.outputs.exit-code != '0' }}
       with:
         name: flow-logs-${{ github.run_id }}
         path: ${{ inputs.working-directory }}/executable_output.txt
-        retention-days: 7
+        retention-days: 1
 
 branding:
   icon: 'play'

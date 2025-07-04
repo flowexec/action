@@ -1,5 +1,7 @@
 set -euo pipefail
 
+echo "::group::Setup"
+
 echo "Installing flow CLI..."
 
 if [ "${FLOW_VERSION:-latest}" = "latest" ]; then
@@ -20,3 +22,5 @@ flow config set timeout "${TIMEOUT:-30m}"
 
 
 echo "✅ flow CLI installed successfully"
+
+echo "::endgroup::"
