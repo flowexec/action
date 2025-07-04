@@ -45,11 +45,7 @@ register_workspace() {
         fi
     fi
 
-    if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
-        flow workspace create "$workspace_name" "$workspace_path" --log-level debug 2>/dev/null || true
-    else
-        flow workspace create "$workspace_name" "$workspace_path" 2>/dev/null || true
-    fi
+    flow workspace create "$workspace_name" "$workspace_path" 2>/dev/null || true
 
     echo "$workspace_name"
 }
@@ -124,25 +120,13 @@ fi
 if [[ "${EXECUTABLE_INPUT:-}" == *"/"* ]]; then
     # Extract workspace from executable reference (e.g., "build backend/api:service")
     primary_workspace=$(echo "$EXECUTABLE_INPUT" | cut -d'/' -f1)
-    if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
-        flow workspace set "$primary_workspace" --log-level debug 2>/dev/null || true
-    else
-        flow workspace set "$primary_workspace" 2>/dev/null || true
-    fi
+    flow workspace set "$primary_workspace" 2>/dev/null || true
 else
-    if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
-        flow workspace set "$workspace_name" --log-level debug 2>/dev/null || true
-    else
-        flow workspace set "$workspace_name" 2>/dev/null || true
-    fi
+    flow workspace set "$workspace_name" 2>/dev/null || true
 fi
 
 echo "🔄 Syncing..."
-if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
-    flow sync --log-level debug
-else
-    flow sync
-fi
+flow sync --log-level debug
 
 echo "✅ Workspace setup completed"
 
