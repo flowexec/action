@@ -16,7 +16,7 @@ flow --version
 
 flow config set tui false
 flow config set log-mode text
-flow config set timeout "${TIMEOUT:30m}"
+flow config set timeout "${TIMEOUT:'30m'}"
 
 
-echo "✅ Flow CLI installed successfully"
+echo "✅ flow CLI installed successfully"

@@ -39,7 +39,6 @@ register_workspace() {
         workspace_path="$(pwd)/$workspace_path"
     fi
 
-    echo "📝 Registering workspace: $workspace_name -> $workspace_path"
     flow workspace create "$workspace_name" "$workspace_path" 2>/dev/null || true
 
     echo "$workspace_name"
@@ -111,10 +110,8 @@ fi
 if [[ "${EXECUTABLE_INPUT:-}" == *"/"* ]]; then
     # Extract workspace from executable reference (e.g., "build backend/api:service")
     primary_workspace=$(echo "$EXECUTABLE_INPUT" | cut -d'/' -f1)
-    echo "🎯 Setting workspace from executable: $primary_workspace"
     flow workspace set "$primary_workspace" 2>/dev/null || true
 else
-    echo "🎯 Setting workspace: $first_workspace"
     flow workspace set "$WORKSPACE_NAME" 2>/dev/null || true
 fi
 
