@@ -9,7 +9,7 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
 
     if [ -z "${VAULT_KEY:-}" ]; then
         echo "🔑 Creating vault..."
-        if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+        if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
             vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY --log-level debug 2>&1)
         else
             vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>&1)
@@ -30,7 +30,7 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
     else
         export FLOW_VAULT_GHA_KEY="$VAULT_KEY"
         echo "Using provided vault key"
-        if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+        if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
             flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY --log-level debug 2>/dev/null || true
         else
             flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>/dev/null || true
@@ -38,7 +38,7 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
 
         echo "vault-key=$VAULT_KEY" >> "$GITHUB_OUTPUT"
     fi
-    if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+    if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
         flow vault switch github-actions --log-level debug
     else
         flow vault switch github-actions
@@ -47,7 +47,7 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
     echo "📝 Setting secrets..."
     echo "$SECRETS_INPUT" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
         echo "Setting secret: $key"
-        if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+        if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
             echo "$value" | flow secret set "$key" --log-level debug
         else
             echo "$value" | flow secret set "$key"

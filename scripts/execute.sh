@@ -11,7 +11,7 @@ fi
 
 set +e
 
-if [ "${ACTIONS_STEP_DEBUG:-false}" = "true" ]; then
+if [ "${ACTIONS_RUNNER_DEBUG:-false}" = "true" ]; then
     echo "🚀 Executing: flow $EXECUTABLE_INPUT --log-level debug"
     FLOW_CMD="flow $EXECUTABLE_INPUT --log-level debug"
 else
