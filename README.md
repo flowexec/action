@@ -1,7 +1,11 @@
-# flow CLI GitHub Action
+<p align="center"><a href="https://flowexec.io"><img src="https://flowexec.io/_media/logo.png" alt="flow" width="200"/></a></p>
 
-[![GitHub release](https://img.shields.io/github/v/release/jahvon/flow-action)](https://github.com/jahvon/flow-action/releases)
-[![GitHub marketplace](https://img.shields.io/badge/marketplace-flow--action-blue?logo=github)](https://github.com/marketplace/actions/flow-action)
+<br>
+
+<p align="center">
+    <a href="https://github.com/jahvon/flow-action/releases"><img src="https://img.shields.io/github/v/release/jahvon/flow-action" alt="GitHub release"></a>
+    <a href="https://github.com/marketplace/actions/flow-action"><img src="https://img.shields.io/badge/marketplace-flow--action-blue?logo=github" alt="Go Reference"></a>
+</p>
 
 Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
 
@@ -152,8 +156,3 @@ jobs:
 
 - Valid flow workspaces and executables in your repository
 - GitHub Actions runner (ubuntu-latest or macos-latest)
-
-## Support
-
-- 📖 [flow Documentation](https://flowexec.io/)
-- 🐛 [Report Issues](https://github.com/jahvon/flow-action/issues)
