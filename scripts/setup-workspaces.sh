@@ -112,7 +112,7 @@ if [[ "${EXECUTABLE_INPUT:-}" == *"/"* ]]; then
     primary_workspace=$(echo "$EXECUTABLE_INPUT" | cut -d'/' -f1)
     flow workspace set "$primary_workspace" 2>/dev/null || true
 else
-    flow workspace set "$WORKSPACE_NAME" 2>/dev/null || true
+    flow workspace set "$workspace_name" 2>/dev/null || true
 fi
 
 echo "🔄 Syncing..."
