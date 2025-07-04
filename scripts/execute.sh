@@ -13,6 +13,9 @@ set +e
 
 echo "🚀 Executing: flow $EXECUTABLE_INPUT"
 
+echo "$(pwd)"
+ls
+
 if [ "${CONTINUE_ON_ERROR:-false}" = "true" ]; then
     flow $EXECUTABLE_INPUT 2>&1 | tee executable_output.txt
     exit_code=$?
