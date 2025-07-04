@@ -4,7 +4,7 @@
 
 <p align="center">
     <a href="https://github.com/jahvon/flow-action/releases"><img src="https://img.shields.io/github/v/release/jahvon/flow-action" alt="GitHub release"></a>
-    <a href="https://github.com/marketplace/actions/flow-action"><img src="https://img.shields.io/badge/marketplace-flow--action-blue?logo=github" alt="Go Reference"></a>
+    <a href="https://github.com/marketplace/actions/flow-execute"><img src="https://img.shields.io/badge/marketplace-flow--action-blue?logo=github" alt="Go Reference"></a>
 </p>
 
 Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
