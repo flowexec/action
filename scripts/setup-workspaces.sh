@@ -38,7 +38,11 @@ register_workspace() {
     local workspace_name="$2"
 
     if [[ ! "$workspace_path" = /* ]]; then
-        workspace_path="$(pwd)/$workspace_path"
+        if [ "$workspace_path" = "." ]; then
+            workspace_path="$(pwd)"
+        else
+            workspace_path="$(pwd)/$workspace_path"
+        fi
     fi
 
     flow workspace create "$workspace_name" "$workspace_path" 2>/dev/null || true
@@ -105,7 +109,11 @@ if [ -n "${WORKSPACES_INPUT:-}" ]; then
         done
     fi
 else
-    workspace_name="${WORKSPACE_NAME:-$(basename "${WORKSPACE_PATH:-.}")}"
+    if [ "${WORKSPACE_PATH:-.}" = "." ]; then
+        workspace_name="${WORKSPACE_NAME:-$(basename "$PWD")}"
+    else
+        workspace_name="${WORKSPACE_NAME:-$(basename "${WORKSPACE_PATH}")}"
+    fi
     register_workspace "${WORKSPACE_PATH:-.}" "$workspace_name"
 fi
 
