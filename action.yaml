@@ -122,12 +122,13 @@ runs:
         VAULT_KEY: ${{ inputs.vault-key }}
         CONTINUE_ON_ERROR: ${{ inputs.continue-on-error }}
         GITHUB_OUTPUT: ${{ github.outputs }}
+        CAPTURE: ${{ inputs.upload == 'true' }}
 
     - name: Upload flow logs
       uses: actions/upload-artifact@v4
       if: ${{ inputs.upload == 'true' && steps.flow-exec.outputs.exit-code != '0' }}
       with:
-        name: flow-logs-${{ github.run_id }}
+        name: flow-executable-logs-${{ github.job }}
         path: ${{ inputs.working-directory }}/executable_output.txt
         retention-days: 1
 

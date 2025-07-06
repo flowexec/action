@@ -13,13 +13,16 @@ set +e
 
 echo "🚀 Executing: flow $EXECUTABLE_INPUT"
 
-if [ "${CONTINUE_ON_ERROR:-false}" = "true" ]; then
+if [ "$CAPTURE" = "true" ]; then
     flow $EXECUTABLE_INPUT 2>&1 | tee executable_output.txt
-    exit_code=$?
+else
+    flow $EXECUTABLE_INPUT
+fi
+exit_code=$?
+
+if [ "${CONTINUE_ON_ERROR:-false}" = "true" ]; then
     echo "📊 Executable completed with exit code: $exit_code (continue-on-error enabled)"
 else
-    flow $EXECUTABLE_INPUT 2>&1 | tee executable_output.txt
-    exit_code=$?
     if [ $exit_code -ne 0 ]; then
         echo "❌ Executable failed with exit code $exit_code"
         echo "::endgroup::"

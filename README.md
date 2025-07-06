@@ -41,6 +41,7 @@ Check out the [flow CI workflow](https://github.com/jahvon/flow/blob/main/.githu
 | `working-directory` | Directory to run flow from | `.` |
 | `timeout` | Timeout for executable execution | `30m` |
 | `continue-on-error` | Continue workflow if flow executable fails | `false` |
+| `upload` | Whether to upload flow logs as an artifact | `false` |
 
 ## Outputs
 
