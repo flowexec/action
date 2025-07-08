@@ -3,8 +3,8 @@
 <br>
 
 <p align="center">
-    <a href="https://github.com/jahvon/flow-action/releases"><img src="https://img.shields.io/github/v/release/jahvon/flow-action" alt="GitHub release"></a>
-    <a href="https://github.com/marketplace/actions/flow-execute"><img src="https://img.shields.io/badge/marketplace-flow--action-blue?logo=github" alt="Go Reference"></a>
+    <a href="https://github.com/flowexec/action/releases"><img src="https://img.shields.io/github/v/release/flowexec/action" alt="GitHub release"></a>
+    <a href="https://github.com/marketplace/actions/flow-execute"><img src="https://img.shields.io/badge/marketplace-flow--execute-blue?logo=github" alt="Go Reference"></a>
 </p>
 
 Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
@@ -12,7 +12,7 @@ Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
 ## Quick Start
 
 ```yaml
-- uses: jahvon/flow-action@v1.0.0-beta1
+- uses: flowexec/action@v1
   with:
     executable: 'build app'
 ```
@@ -67,12 +67,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build application
-        uses: jahvon/flow-action@v1.0.0-beta1
+        uses: flowexec/action@v1
         with:
           executable: 'build app'
 
       - name: Run tests
-        uses: jahvon/flow-action@v1.0.0-beta1
+        uses: flowexec/action@v1
         with:
           executable: 'test unit'
 ```
@@ -81,7 +81,7 @@ jobs:
 
 ```yaml
 - name: Deploy to staging
-  uses: jahvon/flow-action@v1.0.0-beta1
+  uses: flowexec/action@v1
   with:
     executable: 'deploy staging'
     workspaces: |
@@ -95,7 +95,7 @@ jobs:
 
 ```yaml
 - name: Deploy with secrets
-  uses: jahvon/flow-action@v1.0.0-beta1
+  uses: flowexec/action@v1
   with:
     executable: 'deploy production'
     secrets: |
@@ -113,7 +113,7 @@ jobs:
     outputs:
       vault-key: ${{ steps.init.outputs.vault-key }}
     steps:
-      - uses: jahvon/flow-action@v1.0.0-beta1
+      - uses: flowexec/action@v1
         id: init
         with:
           executable: 'validate'
@@ -123,7 +123,7 @@ jobs:
   deploy:
     needs: setup
     steps:
-      - uses: jahvon/flow-action@v1.0.0-beta1
+      - uses: flowexec/action@v1
         with:
           executable: 'deploy production'
           vault-key: ${{ needs.setup.outputs.vault-key }}
@@ -135,7 +135,7 @@ jobs:
 
 ```yaml
 - name: Complex deployment
-  uses: jahvon/flow-action@v1.0.0-beta1
+  uses: flowexec/action@v1
   with:
     executable: 'deploy staging'
     workspaces: |
