@@ -6,7 +6,7 @@ echo "Installing flow CLI..."
 
 if [ "${FLOW_VERSION:-latest}" = "latest" ]; then
     echo "Installing latest version of flow..."
-    curl -sSL https://raw.githubusercontent.com/jahvon/flow/main/scripts/install.sh | bash
+    curl -sSL https://raw.githubusercontent.com/flowexec/flow/main/scripts/install.sh | bash
 elif [ "${FLOW_VERSION}" = "main" ]; then
     echo "Building flow from main branch..."
 
@@ -15,7 +15,7 @@ elif [ "${FLOW_VERSION}" = "main" ]; then
         exit 1
     fi
 
-    git clone https://github.com/jahvon/flow.git /tmp/flow
+    git clone https://github.com/flowexec/flow.git /tmp/flow
     cd /tmp/flow
     go build -o flow .
     sudo mv flow /usr/local/bin/flow
@@ -24,7 +24,7 @@ elif [ "${FLOW_VERSION}" = "main" ]; then
 else
     echo "Installing flow version: $FLOW_VERSION"
     export VERSION="$FLOW_VERSION"
-    curl -sSL https://raw.githubusercontent.com/jahvon/flow/main/scripts/install.sh | bash
+    curl -sSL https://raw.githubusercontent.com/flowexec/flow/main/scripts/install.sh | bash
 fi
 
 echo "Verifying flow installation..."
