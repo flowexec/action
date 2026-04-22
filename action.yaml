@@ -28,14 +28,9 @@ inputs:
     default: ''
 
   clone-depth:
-    description: 'Git clone depth for repository cloning'
+    description: 'Git clone depth for repository cloning (0 for full history)'
     required: false
     default: '1'
-
-  checkout-path:
-    description: 'Base directory for cloning repositories'
-    required: false
-    default: '.flow-workspaces'
 
   flow-version:
     description: 'Version of flow CLI to install'
@@ -60,11 +55,6 @@ inputs:
   vault-key:
     description: 'Vault encryption key (for existing vaults)'
     required: false
-
-  sync-git:
-    description: 'Pull latest changes for all git-sourced workspaces before syncing'
-    required: false
-    default: 'false'
 
   working-directory:
     description: 'Directory to run flow from'
@@ -123,9 +113,7 @@ runs:
         WORKSPACE_NAME: ${{ inputs.workspace-name }}
         CLONE_TOKEN: ${{ inputs.clone-token }}
         CLONE_DEPTH: ${{ inputs.clone-depth }}
-        CHECKOUT_PATH: ${{ inputs.checkout-path }}
         EXECUTABLE_INPUT: ${{ inputs.executable }}
-        SYNC_GIT: ${{ inputs.sync-git }}
 
     - name: Setup vault and secrets
       shell: bash

@@ -33,14 +33,12 @@ Check out the [flow CI workflow](https://github.com/flowexec/flow/blob/main/.git
 | `workspace-name` | Name for the workspace (auto-generated if not provided) | |
 | `workspaces` | YAML/JSON map of workspaces (supports local paths and git repositories) | |
 | `clone-token` | GitHub token for cloning private repositories | |
-| `clone-depth` | Git clone depth for repository cloning | `1` |
-| `checkout-path` | Base directory for cloning repositories | `.flow-workspaces` |
+| `clone-depth` | Git clone depth for repository cloning (0 for full history) | `1` |
 | `flow-version` | Version of flow CLI to install | `latest` |
 | `params` | Parameters to pass to the executable (`KEY=VALUE` pairs, one per line or comma-separated) | |
 | `env` | Environment variables to set during execution (`KEY=VALUE` pairs, one per line) | |
 | `secrets` | Secrets to set in flow vault (`KEY=VALUE` pairs, one per line; JSON also accepted) | |
 | `vault-key` | Vault encryption key (for existing vaults) | |
-| `sync-git` | Pull latest changes for all git-sourced workspaces before syncing | `false` |
 | `working-directory` | Directory to run flow from | `.` |
 | `timeout` | Timeout for executable execution | `30m` |
 | `continue-on-error` | Continue workflow if flow executable fails | `false` |
@@ -113,6 +111,9 @@ Parameters are passed as `--param KEY=VALUE` flags to the flow executable. You c
 
 ### Multi-Workspace (Local + Remote)
 
+Git repositories are cloned and registered as workspaces automatically by flow.
+Use `clone-token` for private repos.
+
 ```yaml
 - name: Deploy to staging
   uses: flowexec/action@v1
@@ -120,30 +121,25 @@ Parameters are passed as `--param KEY=VALUE` flags to the flow executable. You c
     executable: 'deploy staging'
     workspaces: |
       backend: ./backend
-      frontend: https://github.com/user/frontend-repo
-      shared: https://github.com/user/shared-lib
+      frontend: https://github.com/user/frontend-repo.git
+      shared: https://github.com/user/shared-lib.git
     clone-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### Git-Sourced Workspace Updates
-
-For workspaces cloned from git repositories, use `sync-git` to pull the latest changes before execution:
+You can pin a specific branch or tag for git workspaces:
 
 ```yaml
-- name: Deploy with latest shared configs
-  uses: flowexec/action@v1
-  with:
-    executable: 'deploy staging'
     workspaces: |
       app: .
       shared:
-        repo: https://github.com/myorg/shared-flows
+        repo: https://github.com/myorg/shared-flows.git
         ref: main
-    clone-token: ${{ secrets.GITHUB_TOKEN }}
-    sync-git: 'true'
+      stable:
+        repo: https://github.com/myorg/releases.git
+        ref: v1.0.0
 ```
 
-### With Secrets (Auto-Generated Vault)
+### With Secrets
 
 ```yaml
 - name: Deploy with secrets
@@ -212,17 +208,16 @@ Use `continue-on-error` with the `error-code` output to handle failures programm
     workspaces: |
       app: .
       terraform:
-        repo: https://github.com/myorg/terraform
+        repo: https://github.com/myorg/terraform.git
         ref: v1.2.0
       k8s:
-        repo: https://github.com/myorg/k8s-configs
+        repo: https://github.com/myorg/k8s-configs.git
         ref: staging
     clone-token: ${{ secrets.GITHUB_TOKEN }}
     params: 'ENVIRONMENT=staging, DRY_RUN=false'
     env: |
       AWS_REGION=us-east-1
     timeout: '20m'
-    sync-git: 'true'
     secrets: |
       AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
       KUBECONFIG=${{ secrets.KUBECONFIG }}
