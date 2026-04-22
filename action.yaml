@@ -42,14 +42,29 @@ inputs:
     required: false
     default: 'latest'
 
-  secrets:
-    description: 'JSON object of secrets to set in flow vault (key-value pairs)'
+  params:
+    description: 'Parameters to pass to the executable (KEY=VALUE pairs, one per line or comma-separated)'
     required: false
-    default: '{}'
+    default: ''
+
+  env:
+    description: 'Environment variables to set during execution (KEY=VALUE pairs, one per line)'
+    required: false
+    default: ''
+
+  secrets:
+    description: 'Secrets to set in flow vault (KEY=VALUE pairs, one per line; JSON object also accepted)'
+    required: false
+    default: ''
 
   vault-key:
     description: 'Vault encryption key (for existing vaults)'
     required: false
+
+  sync-git:
+    description: 'Pull latest changes for all git-sourced workspaces before syncing'
+    required: false
+    default: 'false'
 
   working-directory:
     description: 'Directory to run flow from'
@@ -80,6 +95,14 @@ outputs:
     description: 'Output from the flow executable'
     value: ${{ steps.flow-exec.outputs.output }}
 
+  vault-key:
+    description: 'Generated vault encryption key (when secrets are configured without a provided key)'
+    value: ${{ steps.flow-vault.outputs.vault-key }}
+
+  error-code:
+    description: 'Machine-readable error code from flow (e.g., EXECUTION_FAILED, TIMEOUT, NOT_FOUND)'
+    value: ${{ steps.flow-exec.outputs.error-code }}
+
 runs:
   using: 'composite'
   steps:
@@ -102,12 +125,14 @@ runs:
         CLONE_DEPTH: ${{ inputs.clone-depth }}
         CHECKOUT_PATH: ${{ inputs.checkout-path }}
         EXECUTABLE_INPUT: ${{ inputs.executable }}
+        SYNC_GIT: ${{ inputs.sync-git }}
 
     - name: Setup vault and secrets
       shell: bash
       run: ${{ github.action_path }}/scripts/setup-vault.sh
       working-directory: ${{ inputs.working-directory }}
-      if: inputs.secrets != '{}' || inputs.vault-key != ''
+      id: flow-vault
+      if: inputs.secrets != '' || inputs.vault-key != ''
       env:
         SECRETS_INPUT: ${{ inputs.secrets }}
         VAULT_KEY: ${{ inputs.vault-key }}
@@ -119,9 +144,10 @@ runs:
       id: flow-exec
       env:
         EXECUTABLE_INPUT: ${{ inputs.executable }}
+        PARAMS_INPUT: ${{ inputs.params }}
+        ENV_INPUT: ${{ inputs.env }}
         VAULT_KEY: ${{ inputs.vault-key }}
         CONTINUE_ON_ERROR: ${{ inputs.continue-on-error }}
-        GITHUB_OUTPUT: ${{ github.outputs }}
         CAPTURE: ${{ inputs.upload == 'true' }}
 
     - name: Upload flow logs
