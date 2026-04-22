@@ -1,7 +1,5 @@
 set -euo pipefail
 
-echo "::group::Execution"
-
 # Vault key setup
 if [ -n "${VAULT_KEY:-}" ]; then
     export FLOW_VAULT_GHA_KEY="$VAULT_KEY"
@@ -80,12 +78,9 @@ if [ "${CONTINUE_ON_ERROR:-false}" = "true" ]; then
 else
     if [ $exit_code -ne 0 ]; then
         echo "::error::Executable failed with exit code $exit_code${error_code:+ ($error_code)}"
-        echo "::endgroup::"
         exit $exit_code
     fi
     echo "Executable completed successfully"
 fi
-
-echo "::endgroup::"
 
 exit $exit_code

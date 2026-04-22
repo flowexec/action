@@ -1,7 +1,5 @@
 set -euo pipefail
 
-echo "::group::Vault Setup"
-
 echo "Setting up flow vault and secrets..."
 
 has_secrets() {
@@ -76,5 +74,3 @@ if has_secrets || [ -n "${VAULT_KEY:-}" ]; then
 else
     echo "No secrets to configure"
 fi
-
-echo "::endgroup::"

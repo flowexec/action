@@ -1,7 +1,5 @@
 set -euo pipefail
 
-echo "::group::Workspace Setup"
-
 echo "Setting up flow workspaces..."
 
 # Configure git credential helper so flow's internal clone picks up the token
@@ -161,5 +159,3 @@ echo "Syncing executables..."
 flow sync --output json
 
 echo "Workspace setup completed"
-
-echo "::endgroup::"

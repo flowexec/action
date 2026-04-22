@@ -1,7 +1,5 @@
 set -euo pipefail
 
-echo "::group::CLI Setup"
-
 detect_os() {
     case "$(uname -s)" in
         MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
@@ -65,5 +63,3 @@ echo "Verifying flow installation..."
 flow --version
 
 echo "flow CLI installed successfully"
-
-echo "::endgroup::"

@@ -101,7 +101,7 @@ runs:
       id: flow-paths
       run: |
         case "$(uname -s)" in
-          MINGW*|MSYS*|CYGWIN*) echo "install-dir=$HOME/bin" >> "$GITHUB_OUTPUT" ;;
+          MINGW*|MSYS*|CYGWIN*) echo "install-dir=$(cygpath -w "$HOME/bin")" >> "$GITHUB_OUTPUT" ;;
           *)                     echo "install-dir=/usr/local/bin" >> "$GITHUB_OUTPUT" ;;
         esac
 
