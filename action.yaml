@@ -98,16 +98,18 @@ runs:
   steps:
     - name: Install flow CLI
       shell: bash
-      run: ${{ github.action_path }}/scripts/install-flow.sh
+      run: bash "${SCRIPTS_DIR}/install-flow.sh"
       env:
+        SCRIPTS_DIR: ${{ github.action_path }}/scripts
         FLOW_VERSION: ${{ inputs.flow-version }}
         TIMEOUT: ${{ inputs.timeout }}
 
     - name: Setup flow workspaces
       shell: bash
-      run: ${{ github.action_path }}/scripts/setup-workspaces.sh
+      run: bash "${SCRIPTS_DIR}/setup-workspaces.sh"
       working-directory: ${{ inputs.working-directory }}
       env:
+        SCRIPTS_DIR: ${{ github.action_path }}/scripts
         WORKSPACES_INPUT: ${{ inputs.workspaces }}
         WORKSPACE_PATH: ${{ inputs.workspace }}
         WORKSPACE_NAME: ${{ inputs.workspace-name }}
@@ -117,20 +119,22 @@ runs:
 
     - name: Setup vault and secrets
       shell: bash
-      run: ${{ github.action_path }}/scripts/setup-vault.sh
+      run: bash "${SCRIPTS_DIR}/setup-vault.sh"
       working-directory: ${{ inputs.working-directory }}
       id: flow-vault
       if: inputs.secrets != '' || inputs.vault-key != ''
       env:
+        SCRIPTS_DIR: ${{ github.action_path }}/scripts
         SECRETS_INPUT: ${{ inputs.secrets }}
         VAULT_KEY: ${{ inputs.vault-key }}
 
     - name: Execute flow executable
       shell: bash
-      run: ${{ github.action_path }}/scripts/execute.sh
+      run: bash "${SCRIPTS_DIR}/execute.sh"
       working-directory: ${{ inputs.working-directory }}
       id: flow-exec
       env:
+        SCRIPTS_DIR: ${{ github.action_path }}/scripts
         EXECUTABLE_INPUT: ${{ inputs.executable }}
         PARAMS_INPUT: ${{ inputs.params }}
         ENV_INPUT: ${{ inputs.env }}
