@@ -107,7 +107,6 @@ runs:
 
         version="${FLOW_VERSION:-latest}"
         if [ "$version" = "main" ]; then
-          # Bust daily so main builds stay reasonably fresh
           echo "cache-key=flow-main-${{ runner.os }}-${{ runner.arch }}-$(date +%Y%m%d)" >> "$GITHUB_OUTPUT"
         else
           echo "cache-key=flow-${version}-${{ runner.os }}-${{ runner.arch }}" >> "$GITHUB_OUTPUT"
@@ -124,7 +123,9 @@ runs:
 
     - name: Install flow CLI
       shell: bash
-      run: bash "${SCRIPTS_DIR}/install-flow.sh"
+      run: |
+        # Install flow CLI
+        source "$SCRIPTS_DIR/install-flow.sh"
       env:
         SCRIPTS_DIR: ${{ github.action_path }}/scripts
         FLOW_VERSION: ${{ inputs.flow-version }}
@@ -133,7 +134,9 @@ runs:
 
     - name: Setup flow workspaces
       shell: bash
-      run: bash "${SCRIPTS_DIR}/setup-workspaces.sh"
+      run: |
+        # Setup flow workspaces
+        source "$SCRIPTS_DIR/setup-workspaces.sh"
       working-directory: ${{ inputs.working-directory }}
       env:
         SCRIPTS_DIR: ${{ github.action_path }}/scripts
@@ -146,7 +149,9 @@ runs:
 
     - name: Setup vault and secrets
       shell: bash
-      run: bash "${SCRIPTS_DIR}/setup-vault.sh"
+      run: |
+        # Setup vault and secrets
+        source "$SCRIPTS_DIR/setup-vault.sh"
       working-directory: ${{ inputs.working-directory }}
       id: flow-vault
       if: inputs.secrets != '' || inputs.vault-key != ''
@@ -157,7 +162,9 @@ runs:
 
     - name: Execute flow executable
       shell: bash
-      run: bash "${SCRIPTS_DIR}/execute.sh"
+      run: |
+        # Execute: flow ${{ inputs.executable }}
+        source "$SCRIPTS_DIR/execute.sh"
       working-directory: ${{ inputs.working-directory }}
       id: flow-exec
       env:

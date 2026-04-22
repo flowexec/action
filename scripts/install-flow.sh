@@ -17,14 +17,6 @@ if [ "$RUNNER_OS_TYPE" = "windows" ] && [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
     echo "$HOME/bin" >> "$GITHUB_PATH"
 fi
 
-# On Windows CI, Git Bash sets TERM=xterm-256color which causes the charmbracelet
-# color profile detector to probe terminfo databases via user.Current() — this
-# hangs on Windows GitHub Actions runners. Setting TERM=dumb skips all terminal
-# probing. Flow's log-mode is set to text anyway, so no color features are lost.
-if [ "$RUNNER_OS_TYPE" = "windows" ]; then
-    export TERM=dumb
-fi
-
 if [ "${CACHE_HIT:-}" = "true" ] && command -v flow &>/dev/null; then
     echo "Using cached flow binary"
 else
