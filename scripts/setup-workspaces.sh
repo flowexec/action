@@ -23,6 +23,17 @@ is_absolute() {
     esac
 }
 
+# Return the current directory as a native path.
+# On Windows Git Bash, pwd returns /d/a/... but native Windows binaries
+# need D:/a/... — pwd -W gives the Windows-native form.
+native_pwd() {
+    if pwd -W &>/dev/null; then
+        pwd -W
+    else
+        pwd
+    fi
+}
+
 # Register a local directory as a workspace
 register_local_workspace() {
     local workspace_path="$1"
@@ -30,9 +41,9 @@ register_local_workspace() {
 
     if ! is_absolute "$workspace_path"; then
         if [ "$workspace_path" = "." ]; then
-            workspace_path="$(pwd)"
+            workspace_path="$(native_pwd)"
         else
-            workspace_path="$(pwd)/$workspace_path"
+            workspace_path="$(native_pwd)/$workspace_path"
         fi
     fi
 
