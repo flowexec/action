@@ -1,4 +1,4 @@
-<p align="center"><a href="https://flowexec.io"><img src="https://flowexec.io/_media/logo.png" alt="flow" width="200"/></a></p>
+<p align="center"><a href="https://flowexec.io"><img src="https://flowexec.io/logo-light.png" alt="flow" width="200"/></a></p>
 
 <br>
 
@@ -7,7 +7,7 @@
     <a href="https://github.com/marketplace/actions/flow-execute"><img src="https://img.shields.io/badge/marketplace-flow--execute-blue?logo=github" alt="Go Reference"></a>
 </p>
 
-Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
+Execute [flow](https://github.com/flowexec/flow) workflows in your GitHub Actions.
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ Execute [flow](https://github.com/jahvon/flow) workflows in your GitHub Actions.
     executable: 'build app'
 ```
 
-Check out the [flow CI workflow](https://github.com/jahvon/flow/blob/main/.github/workflows/ci.yaml) for examples of how this can be used.
+Check out the [flow CI workflow](https://github.com/flowexec/flow/blob/main/.github/workflows/ci.yaml) for examples of how this can be used.
 
 ## Inputs
 
@@ -33,24 +33,25 @@ Check out the [flow CI workflow](https://github.com/jahvon/flow/blob/main/.githu
 | `workspace-name` | Name for the workspace (auto-generated if not provided) | |
 | `workspaces` | YAML/JSON map of workspaces (supports local paths and git repositories) | |
 | `clone-token` | GitHub token for cloning private repositories | |
-| `clone-depth` | Git clone depth for repository cloning | `1` |
-| `checkout-path` | Base directory for cloning repositories | `.flow-workspaces` |
+| `clone-depth` | Git clone depth for repository cloning (0 for full history) | `1` |
 | `flow-version` | Version of flow CLI to install | `latest` |
-| `secrets` | JSON object of secrets to set in flow vault | `{}` |
+| `params` | Parameters to pass to the executable (`KEY=VALUE` pairs, one per line or comma-separated) | |
+| `env` | Environment variables to set during execution (`KEY=VALUE` pairs, one per line) | |
+| `secrets` | Secrets to set in flow vault (`KEY=VALUE` pairs, one per line; JSON also accepted) | |
 | `vault-key` | Vault encryption key (for existing vaults) | |
 | `working-directory` | Directory to run flow from | `.` |
 | `timeout` | Timeout for executable execution | `30m` |
 | `continue-on-error` | Continue workflow if flow executable fails | `false` |
-| `upload` | Whether to upload flow logs as an artifact | `false` |
+| `upload` | Upload flow logs as an artifact on failure | `false` |
 
 ## Outputs
 
 | Output | Description |
 |--------|-------------|
 | `exit-code` | Exit code of the flow executable |
-| `output` | Output from the flow executable |
-| `execution-time` | Time taken to execute the flow executable |
-| `vault-key` | Generated vault encryption key (if vault was created) |
+| `output` | Captured output from the flow executable (when `upload: true`) |
+| `vault-key` | Generated vault encryption key (when secrets are configured without a provided key) |
+| `error-code` | Machine-readable error code on failure (e.g., `EXECUTION_FAILED`, `TIMEOUT`, `NOT_FOUND`) |
 
 ## Examples
 
@@ -77,7 +78,41 @@ jobs:
           executable: 'test unit'
 ```
 
+### Passing Parameters
+
+```yaml
+- name: Run tests with CI mode
+  uses: flowexec/action@v1
+  with:
+    executable: 'test unit'
+    params: |
+      CI=true
+      COVERAGE=true
+```
+
+Parameters are passed as `--param KEY=VALUE` flags to the flow executable. You can also use comma-separated format:
+
+```yaml
+    params: 'CI=true, COVERAGE=true'
+```
+
+### Environment Variables
+
+```yaml
+- name: Publish release
+  uses: flowexec/action@v1
+  with:
+    executable: 'publish release'
+    params: 'VERSION=1.2.0'
+    env: |
+      GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+      NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+```
+
 ### Multi-Workspace (Local + Remote)
+
+Git repositories are cloned and registered as workspaces automatically by flow.
+Use `clone-token` for private repos.
 
 ```yaml
 - name: Deploy to staging
@@ -86,12 +121,25 @@ jobs:
     executable: 'deploy staging'
     workspaces: |
       backend: ./backend
-      frontend: https://github.com/user/frontend-repo
-      shared: https://github.com/user/shared-lib
+      frontend: https://github.com/user/frontend-repo.git
+      shared: https://github.com/user/shared-lib.git
     clone-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### With Secrets (Auto-Generated Vault)
+You can pin a specific branch or tag for git workspaces:
+
+```yaml
+    workspaces: |
+      app: .
+      shared:
+        repo: https://github.com/myorg/shared-flows.git
+        ref: main
+      stable:
+        repo: https://github.com/myorg/releases.git
+        ref: v1.0.0
+```
+
+### With Secrets
 
 ```yaml
 - name: Deploy with secrets
@@ -99,10 +147,8 @@ jobs:
   with:
     executable: 'deploy production'
     secrets: |
-      {
-        "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
-        "API_KEY": "${{ secrets.API_KEY }}"
-      }
+      DATABASE_URL=${{ secrets.DATABASE_URL }}
+      API_KEY=${{ secrets.API_KEY }}
 ```
 
 ### Cross-Job Vault Sharing
@@ -118,7 +164,7 @@ jobs:
         with:
           executable: 'validate'
           secrets: |
-            {"shared-secret": "${{ secrets.SHARED_SECRET }}"}
+            SHARED_SECRET=${{ secrets.SHARED_SECRET }}
 
   deploy:
     needs: setup
@@ -128,7 +174,28 @@ jobs:
           executable: 'deploy production'
           vault-key: ${{ needs.setup.outputs.vault-key }}
           secrets: |
-            {"deploy-key": "${{ secrets.DEPLOY_KEY }}"}
+            DEPLOY_KEY=${{ secrets.DEPLOY_KEY }}
+```
+
+### Error Handling
+
+Use `continue-on-error` with the `error-code` output to handle failures programmatically:
+
+```yaml
+- name: Run migration
+  uses: flowexec/action@v1
+  id: migrate
+  with:
+    executable: 'migrate database'
+    continue-on-error: 'true'
+
+- name: Handle failure
+  if: steps.migrate.outputs.exit-code != '0'
+  run: |
+    echo "Migration failed with error: ${{ steps.migrate.outputs.error-code }}"
+    if [ "${{ steps.migrate.outputs.error-code }}" = "TIMEOUT" ]; then
+      echo "Consider increasing the timeout"
+    fi
 ```
 
 ### Advanced Configuration
@@ -141,21 +208,22 @@ jobs:
     workspaces: |
       app: .
       terraform:
-        repo: https://github.com/myorg/terraform
+        repo: https://github.com/myorg/terraform.git
         ref: v1.2.0
       k8s:
-        repo: https://github.com/myorg/k8s-configs
+        repo: https://github.com/myorg/k8s-configs.git
         ref: staging
     clone-token: ${{ secrets.GITHUB_TOKEN }}
+    params: 'ENVIRONMENT=staging, DRY_RUN=false'
+    env: |
+      AWS_REGION=us-east-1
     timeout: '20m'
     secrets: |
-      {
-        "AWS_ACCESS_KEY": "${{ secrets.AWS_ACCESS_KEY }}",
-        "KUBECONFIG": "${{ secrets.KUBECONFIG }}"
-      }
+      AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+      KUBECONFIG=${{ secrets.KUBECONFIG }}
 ```
 
 ## Requirements
 
 - Valid flow workspaces and executables in your repository
-- GitHub Actions runner (ubuntu-latest or macos-latest)
+- GitHub Actions runner (`ubuntu-latest`, `macos-latest`, or `windows-latest`)

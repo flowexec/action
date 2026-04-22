@@ -4,15 +4,25 @@ echo "::group::Vault Setup"
 
 echo "Setting up flow vault and secrets..."
 
-if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
-    echo "🔐 Setting up vault..."
+has_secrets() {
+    local input="${SECRETS_INPUT:-}"
+    [ -n "$input" ]
+}
+
+if has_secrets || [ -n "${VAULT_KEY:-}" ]; then
+    echo "Setting up vault..."
 
     if [ -z "${VAULT_KEY:-}" ]; then
-        echo "🔑 Creating vault..."
-        vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>&1)
+        echo "Creating vault..."
+        vault_output=$(flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY --output json 2>&1)
 
-        # extract from pattern: "Your vault encryption key is: <key>"
-        extracted_key=$(echo "$vault_output" | grep -o "Your vault encryption key is: .*" | cut -d':' -f2- | xargs || echo "")
+        # Extract the generated key from structured JSON output
+        extracted_key=$(echo "$vault_output" | jq -r '.result.data.generatedKey // empty' 2>/dev/null || echo "")
+
+        if [ -z "$extracted_key" ]; then
+            # Fallback: try the plain-text pattern for older versions
+            extracted_key=$(echo "$vault_output" | grep -o "Your vault encryption key is: .*" | cut -d':' -f2- | xargs || echo "")
+        fi
 
         if [ -n "$extracted_key" ]; then
             export FLOW_VAULT_GHA_KEY="$extracted_key"
@@ -20,27 +30,51 @@ if [ "${SECRETS_INPUT:-{}}" != "{}" ]; then
             echo "::add-mask::$extracted_key"
             echo "vault-key=$extracted_key" >> "$GITHUB_OUTPUT"
         else
-            echo "⚠️  Could not extract vault key from output:"
+            echo "::error::Could not extract vault key from output"
             echo "$vault_output"
+            exit 1
         fi
     else
         export FLOW_VAULT_GHA_KEY="$VAULT_KEY"
         echo "Using provided vault key"
-        flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY 2>/dev/null || true
+        flow vault create github-actions --key-env FLOW_VAULT_GHA_KEY --output json 2>/dev/null || true
 
         echo "vault-key=$VAULT_KEY" >> "$GITHUB_OUTPUT"
     fi
-    flow vault switch github-actions
+    flow vault switch github-actions --output json
 
-    echo "📝 Setting secrets..."
-    echo "$SECRETS_INPUT" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
-        echo "Setting secret: $key"
-        echo "$value" | flow secret set "$key"
-    done
+    if has_secrets; then
+        echo "Setting secrets..."
 
-    echo "✅ Vault setup completed"
+        secrets_input="$SECRETS_INPUT"
+        trimmed="${secrets_input#"${secrets_input%%[![:space:]]*}"}"
+
+        if [[ "$trimmed" == "{"* ]]; then
+            # JSON object format (backwards compatible)
+            echo "$secrets_input" | jq -r 'to_entries[] | "\(.key)\n\(.value)"' | while read -r key && read -r value; do
+                echo "  Setting secret: $key"
+                flow secret set "$key" "$value" --output json
+            done
+        else
+            # KEY=VALUE format (one per line)
+            while IFS= read -r line; do
+                line=$(echo "$line" | xargs) # trim whitespace
+                [ -z "$line" ] && continue
+                key="${line%%=*}"
+                value="${line#*=}"
+                if [ "$key" = "$line" ]; then
+                    echo "::warning::Skipping invalid secret line (missing '='): $key"
+                    continue
+                fi
+                echo "  Setting secret: $key"
+                flow secret set "$key" "$value" --output json
+            done <<< "$secrets_input"
+        fi
+    fi
+
+    echo "Vault setup completed"
 else
-    echo "ℹ️  No secrets to configure"
+    echo "No secrets to configure"
 fi
 
 echo "::endgroup::"
