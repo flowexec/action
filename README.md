@@ -1,4 +1,4 @@
-<p align="center"><a href="https://flowexec.io"><img src="https://flowexec.io/_media/logo.png" alt="flow" width="200"/></a></p>
+<p align="center"><a href="https://flowexec.io"><img src="https://flowexec.io/logo-light.png" alt="flow" width="200"/></a></p>
 
 <br>
 
