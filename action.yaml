@@ -96,6 +96,32 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Resolve flow install path
+      shell: bash
+      id: flow-paths
+      run: |
+        case "$(uname -s)" in
+          MINGW*|MSYS*|CYGWIN*) echo "install-dir=$HOME/bin" >> "$GITHUB_OUTPUT" ;;
+          *)                     echo "install-dir=/usr/local/bin" >> "$GITHUB_OUTPUT" ;;
+        esac
+
+        version="${FLOW_VERSION:-latest}"
+        if [ "$version" = "main" ]; then
+          # Bust daily so main builds stay reasonably fresh
+          echo "cache-key=flow-main-${{ runner.os }}-${{ runner.arch }}-$(date +%Y%m%d)" >> "$GITHUB_OUTPUT"
+        else
+          echo "cache-key=flow-${version}-${{ runner.os }}-${{ runner.arch }}" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        FLOW_VERSION: ${{ inputs.flow-version }}
+
+    - name: Cache flow binary
+      uses: actions/cache@v4
+      id: flow-cache
+      with:
+        path: ${{ steps.flow-paths.outputs.install-dir }}/flow*
+        key: ${{ steps.flow-paths.outputs.cache-key }}
+
     - name: Install flow CLI
       shell: bash
       run: bash "${SCRIPTS_DIR}/install-flow.sh"
@@ -103,6 +129,7 @@ runs:
         SCRIPTS_DIR: ${{ github.action_path }}/scripts
         FLOW_VERSION: ${{ inputs.flow-version }}
         TIMEOUT: ${{ inputs.timeout }}
+        CACHE_HIT: ${{ steps.flow-cache.outputs.cache-hit }}
 
     - name: Setup flow workspaces
       shell: bash
