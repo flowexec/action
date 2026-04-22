@@ -56,10 +56,30 @@ else
     fi
 fi
 
-flow config set interactive false
-flow config set tui false
-flow config set log-mode text
-flow config set timeout "${TIMEOUT:-30m}"
+# Debug: diagnose hang on first flow invocation (especially Windows)
+echo "[debug] Runner OS: $RUNNER_OS_TYPE"
+echo "[debug] flow binary: $(command -v flow)"
+echo "[debug] TERM=${TERM:-<unset>}"
+echo "[debug] Attempting: flow config set interactive false (timeout 30s)..."
+
+if timeout 30 flow config set interactive false; then
+    echo "[debug] interactive=false OK"
+else
+    exit_code=$?
+    if [ $exit_code -eq 124 ]; then
+        echo "::error::flow config set interactive false timed out after 30s"
+        echo "[debug] Attempting flow --version with strace/timeout for diagnostics..."
+        # Try with no stdin to rule out terminal read blocking
+        timeout 10 flow --version < /dev/null 2>&1 || echo "[debug] flow --version also failed/timed out (exit=$?)"
+    else
+        echo "[debug] flow config set interactive false failed with exit code $exit_code"
+    fi
+    exit 1
+fi
+
+timeout 30 flow config set tui false || true
+timeout 30 flow config set log-mode text || true
+timeout 30 flow config set timeout "${TIMEOUT:-30m}" || true
 
 echo "Verifying flow installation..."
 flow --version
