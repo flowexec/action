@@ -172,7 +172,7 @@ runs:
         EXECUTABLE_INPUT: ${{ inputs.executable }}
         PARAMS_INPUT: ${{ inputs.params }}
         ENV_INPUT: ${{ inputs.env }}
-        VAULT_KEY: ${{ inputs.vault-key }}
+        VAULT_KEY: ${{ steps.flow-vault.outputs.vault-key || inputs.vault-key }}
         CONTINUE_ON_ERROR: ${{ inputs.continue-on-error }}
         CAPTURE: ${{ inputs.upload == 'true' }}
 
