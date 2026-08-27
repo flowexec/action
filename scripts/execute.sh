@@ -45,10 +45,17 @@ else
     exit_code=$?
 fi
 
-# Extract structured error code from stderr if the command failed
+# Surface stderr. It was previously captured only to mine an error code and then
+# discarded, so anything flow wrote there - notably the structured error envelope
+# under --output json - never reached the log at all.
 error_code=""
-if [ $exit_code -ne 0 ] && [ -s "$stderr_file" ]; then
-    error_code=$(jq -r '.error.code // empty' < "$stderr_file" 2>/dev/null || echo "")
+error_message=""
+if [ -s "$stderr_file" ]; then
+    if [ $exit_code -ne 0 ]; then
+        error_code=$(jq -r '.error.code // empty' < "$stderr_file" 2>/dev/null || echo "")
+        error_message=$(jq -r '.error.message // empty' < "$stderr_file" 2>/dev/null || echo "")
+    fi
+    cat "$stderr_file" >&2
 fi
 
 set -e
@@ -73,11 +80,36 @@ fi
 
 rm -f "$stderr_file" "$output_file"
 
+# Write a step summary so the outcome is visible on the run page itself. flow
+# collapses a multi-task run's output into a log group, so without this a reader
+# has to expand the log just to learn whether the step passed.
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    if [ $exit_code -eq 0 ]; then
+        printf '### ✅ `flow %s`\n\n' "$EXECUTABLE_INPUT" >> "$GITHUB_STEP_SUMMARY"
+    else
+        {
+            printf '### ❌ `flow %s`\n\n' "$EXECUTABLE_INPUT"
+            printf 'Exit code `%s`' "$exit_code"
+            [ -n "$error_code" ] && printf ' · `%s`' "$error_code"
+            printf '\n'
+            if [ -n "$error_message" ]; then
+                printf '\n```\n%s\n```\n' "$error_message"
+            fi
+        } >> "$GITHUB_STEP_SUMMARY"
+    fi
+fi
+
 if [ "${CONTINUE_ON_ERROR:-false}" = "true" ]; then
     echo "Executable completed with exit code: $exit_code (continue-on-error enabled)"
 else
     if [ $exit_code -ne 0 ]; then
-        echo "::error::Executable failed with exit code $exit_code${error_code:+ ($error_code)}"
+        # Annotations render on the run page and in the PR, where a collapsed log
+        # group does not. Carry the message, not just the exit code.
+        annotation="flow $EXECUTABLE_INPUT failed with exit code $exit_code${error_code:+ ($error_code)}"
+        [ -n "$error_message" ] && annotation="$annotation: $error_message"
+        # A literal newline would end the workflow command early.
+        annotation=${annotation//$'\n'/ }
+        echo "::error::$annotation"
         exit $exit_code
     fi
     echo "Executable completed successfully"
