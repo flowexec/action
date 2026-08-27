@@ -35,6 +35,7 @@ Check out the [flow CI workflow](https://github.com/flowexec/flow/blob/main/.git
 | `clone-token` | GitHub token for cloning private repositories | |
 | `clone-depth` | Git clone depth for repository cloning (0 for full history) | `1` |
 | `flow-version` | Version of flow CLI to install | `latest` |
+| `flow-binary` | Path to a pre-built flow binary to use instead of installing one (relative to the workspace root). Takes precedence over `flow-version`. | |
 | `params` | Parameters to pass to the executable (`KEY=VALUE` pairs, one per line or comma-separated) | |
 | `env` | Environment variables to set during execution (`KEY=VALUE` pairs, one per line) | |
 | `secrets` | Secrets to set in flow vault (`KEY=VALUE` pairs, one per line; JSON also accepted) | |
@@ -222,6 +223,26 @@ Use `continue-on-error` with the `error-code` output to handle failures programm
       AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
       KUBECONFIG=${{ secrets.KUBECONFIG }}
 ```
+
+### Testing an Unreleased flow Build
+
+Set `flow-binary` to run your executables with a flow binary you just built, instead of an
+installed release. This matters when the repository *is* flow, or when a task depends on a
+flow feature that has not shipped yet — otherwise CI runs the released flow against the code
+under review, and a task using the new behavior fails no matter what the PR does.
+
+```yaml
+- name: Build flow
+  run: go build -o ./bin/flow .
+
+- name: Run tests with the freshly built flow
+  uses: flowexec/action@v1
+  with:
+    executable: 'test unit'
+    flow-binary: ./bin/flow
+```
+
+The path is relative to the workspace root, and takes precedence over `flow-version`.
 
 ## Requirements
 

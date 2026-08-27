@@ -15,7 +15,25 @@ if [ "$RUNNER_OS_TYPE" = "windows" ] && [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
     echo "$HOME/bin" >> "$GITHUB_PATH"
 fi
 
-if [ "${CACHE_HIT:-}" = "true" ] && command -v flow &>/dev/null; then
+if [ -n "${FLOW_BINARY:-}" ]; then
+    # A caller-supplied build takes precedence over anything downloadable. This is
+    # how a repo tests the flow binary it just built rather than a released one.
+    if [ ! -f "$FLOW_BINARY" ]; then
+        echo "flow-binary not found: $FLOW_BINARY"
+        exit 1
+    fi
+    echo "Using provided flow binary: $FLOW_BINARY"
+
+    if [ "$RUNNER_OS_TYPE" = "windows" ]; then
+        install_dir="$HOME/bin"
+        mkdir -p "$install_dir"
+        cp "$FLOW_BINARY" "$install_dir/flow.exe"
+        chmod +x "$install_dir/flow.exe"
+    else
+        sudo cp "$FLOW_BINARY" /usr/local/bin/flow
+        sudo chmod +x /usr/local/bin/flow
+    fi
+elif [ "${CACHE_HIT:-}" = "true" ] && command -v flow &>/dev/null; then
     echo "Using cached flow binary"
 else
     echo "Installing flow CLI..."

@@ -37,6 +37,15 @@ inputs:
     required: false
     default: 'latest'
 
+  flow-binary:
+    description: >-
+      Path to a pre-built flow binary to use instead of installing one, relative to
+      the workspace root. Takes precedence over flow-version. Intended for testing a
+      flow build before it is released - notably flow's own CI, which would otherwise
+      run its tasks with a released flow rather than the code under review.
+    required: false
+    default: ''
+
   params:
     description: 'Parameters to pass to the executable (KEY=VALUE pairs, one per line or comma-separated)'
     required: false
@@ -115,6 +124,7 @@ runs:
         FLOW_VERSION: ${{ inputs.flow-version }}
 
     - name: Cache flow binary
+      if: inputs.flow-binary == ''
       uses: actions/cache@v4
       id: flow-cache
       with:
@@ -129,6 +139,7 @@ runs:
       env:
         SCRIPTS_DIR: ${{ github.action_path }}/scripts
         FLOW_VERSION: ${{ inputs.flow-version }}
+        FLOW_BINARY: ${{ inputs.flow-binary }}
         TIMEOUT: ${{ inputs.timeout }}
         CACHE_HIT: ${{ steps.flow-cache.outputs.cache-hit }}
 
